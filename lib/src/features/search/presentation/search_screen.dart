@@ -25,6 +25,21 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     });
   }
 
+  Color _searchBorderColor(
+      BuildContext context, AsyncValue<WordResult?> asyncValue) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final neutral = colorScheme.outlineVariant;
+    if (_query.isEmpty) {
+      return neutral;
+    }
+    return asyncValue.when(
+      data: (result) =>
+          result != null ? Colors.greenAccent.shade400 : colorScheme.error,
+      loading: () => neutral,
+      error: (_, __) => colorScheme.error,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // Observer le provider avec la requête actuelle
@@ -41,20 +56,30 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 child: _buildResult(searchAsync),
               ),
             ),
-            TextField(
+            SearchBar(
               controller: _controller,
-              decoration: InputDecoration(
-                hintText: 'Saisissez un mot',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
+              hintText: 'Saisissez un mot',
+              leading: const Icon(Icons.search),
+              trailing: [
+                IconButton(
                   icon: const Icon(Icons.send),
                   onPressed: () => _submit(_controller.text),
+                  tooltip: 'Lancer la recherche',
                 ),
-              ),
+              ],
               textInputAction: TextInputAction.search,
               textCapitalization: TextCapitalization.characters,
               onSubmitted: _submit,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              backgroundColor: Theme.of(context).colorScheme.surface,
+              shadowColor: Colors.transparent,
+              shape: MaterialStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                  side: BorderSide(
+                      color: _searchBorderColor(context, searchAsync),
+                      width: 1.6),
+                ),
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -68,7 +93,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.search, size: 64, color: Theme.of(context).colorScheme.outline),
+          Icon(Icons.search,
+              size: 64, color: Theme.of(context).colorScheme.outline),
           const SizedBox(height: 16),
           Text(
             'Entrez un mot pour vérifier',
@@ -102,7 +128,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    color:
+                        Theme.of(context).colorScheme.surfaceContainerHighest,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -133,7 +160,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         }
       },
       loading: () => const CircularProgressIndicator(),
-      error: (err, stack) => Text('Erreur: $err', style: const TextStyle(color: Colors.red)),
+      error: (err, stack) =>
+          Text('Erreur: $err', style: const TextStyle(color: Colors.red)),
     );
   }
 }

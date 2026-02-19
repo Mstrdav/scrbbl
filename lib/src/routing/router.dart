@@ -3,9 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../features/search/presentation/search_screen.dart';
-import '../features/training/presentation/training_screen.dart';
-import '../features/score/presentation/score_screen.dart';
 import '../features/settings/presentation/settings_screen.dart';
+import '../features/score/presentation/score_screen.dart';
+import '../features/training/presentation/training_screen.dart';
+import '../shared/providers/nav_preferences_provider.dart';
 
 // Clé de navigation pour gérer l'état
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -44,37 +45,60 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class ScaffoldWithNavBar extends StatelessWidget {
+class ScaffoldWithNavBar extends ConsumerWidget {
   const ScaffoldWithNavBar({required this.child, super.key});
 
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final navPrefs = ref.watch(navPreferencesProvider);
+    final navigationBar = _buildNavigationBar(context, navPrefs);
+
     return Scaffold(
+      extendBody: navPrefs.style == NavBarStyle.floating,
       body: child,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _calculateSelectedIndex(context),
-        onDestinationSelected: (int index) => _onItemTapped(index, context),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.search),
-            label: 'Search',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.fitness_center), // Ou model_training
-            label: 'Train',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.scoreboard), // Ou numbers
-            label: 'Score',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
-      ),
+      bottomNavigationBar: navPrefs.style == NavBarStyle.floating
+          ? Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              child: Material(
+                elevation: 12,
+                borderRadius: BorderRadius.circular(32),
+                color: Theme.of(context).colorScheme.surface,
+                child: navigationBar,
+              ),
+            )
+          : navigationBar,
+    );
+  }
+
+  Widget _buildNavigationBar(BuildContext context, NavPreferencesState prefs) {
+    return NavigationBar(
+      labelBehavior: prefs.labelMode.behavior,
+      backgroundColor:
+          prefs.style == NavBarStyle.floating ? Colors.transparent : null,
+      surfaceTintColor:
+          prefs.style == NavBarStyle.floating ? Colors.transparent : null,
+      selectedIndex: _calculateSelectedIndex(context),
+      onDestinationSelected: (int index) => _onItemTapped(index, context),
+      destinations: const [
+        NavigationDestination(
+          icon: Icon(Icons.search),
+          label: 'Search',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.fitness_center), // Ou model_training
+          label: 'Train',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.scoreboard), // Ou numbers
+          label: 'Score',
+        ),
+        NavigationDestination(
+          icon: Icon(Icons.settings),
+          label: 'Settings',
+        ),
+      ],
     );
   }
 
