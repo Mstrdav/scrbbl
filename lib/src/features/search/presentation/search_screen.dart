@@ -70,8 +70,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               textInputAction: TextInputAction.search,
               textCapitalization: TextCapitalization.characters,
               onSubmitted: _submit,
-              backgroundColor: Theme.of(context).colorScheme.surface,
-              shadowColor: Colors.transparent,
+              backgroundColor: MaterialStateProperty.all(Theme.of(context).colorScheme.surface),
+              shadowColor: MaterialStateProperty.all(Colors.transparent),
               shape: MaterialStateProperty.all(
                 RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
