@@ -213,8 +213,9 @@ class _ScoreScreenState extends ConsumerState<ScoreScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove_circle_outline),
+                    _ActionButton(
+                      icon: Icons.remove_circle_outline,
+                      tooltip: '−1',
                       onPressed: () => notifier.adjustScore(player.id, -1),
                       onLongPress: () => _showAmountDialog(
                         player: player,
@@ -223,8 +224,9 @@ class _ScoreScreenState extends ConsumerState<ScoreScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    IconButton(
-                      icon: const Icon(Icons.add_circle_outline),
+                    _ActionButton(
+                      icon: Icons.add_circle_outline,
+                      tooltip: '+1',
                       onPressed: () => notifier.adjustScore(player.id, 1),
                       onLongPress: () => _showAmountDialog(
                         player: player,
@@ -278,6 +280,32 @@ class _ScoreScreenState extends ConsumerState<ScoreScreen> {
             style: TextStyle(color: Colors.grey),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+    required this.onLongPress,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+  final VoidCallback onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: IconButton(
+        icon: Icon(icon),
+        onPressed: onPressed,
+        tooltip: tooltip,
       ),
     );
   }

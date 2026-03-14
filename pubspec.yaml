@@ -18,8 +18,12 @@ dependencies:
   sqlite3_flutter_libs: ^0.5.24
   path_provider: ^2.1.5
   path: ^1.9.0
-  dynamic_color: ^1.7.0
+  dynamic_color: 1.8.1
   shared_preferences: ^2.3.2
+
+dependency_overrides:
+  dynamic_color:
+    path: patches/dynamic_color
 
 dev_dependencies:
   flutter_test:
