@@ -15,22 +15,27 @@ class PlayerScore {
   const PlayerScore(
       {required this.id, required this.name, required this.score});
 
-  PlayerScore copyWith({int? score}) {
-    return PlayerScore(id: id, name: name, score: score ?? this.score);
+  PlayerScore copyWith({String? name, int? score}) {
+    return PlayerScore(
+      id: id,
+      name: name ?? this.name,
+      score: score ?? this.score,
+    );
   }
 }
 
 @immutable
 class ScoreBoardState {
   final List<PlayerScore> players;
-  final String? lastAction;
+  final List<String> history;
 
-  const ScoreBoardState({this.players = const [], this.lastAction});
+  const ScoreBoardState({this.players = const [], this.history = const []});
 
-  ScoreBoardState copyWith({List<PlayerScore>? players, String? lastAction}) {
+  ScoreBoardState copyWith(
+      {List<PlayerScore>? players, List<String>? history}) {
     return ScoreBoardState(
       players: players ?? this.players,
-      lastAction: lastAction ?? this.lastAction,
+      history: history ?? this.history,
     );
   }
 }
@@ -48,43 +53,58 @@ class ScoreBoardNotifier extends StateNotifier<ScoreBoardState> {
       score: 0,
     );
 
-    state = state.copyWith(
-      players: [...state.players, player],
-      lastAction: 'Joueur ${player.name} ajouté.',
-    );
+    _pushHistory('Joueur ${player.name} ajouté.');
+    state = state.copyWith(players: [...state.players, player]);
   }
 
   void adjustScore(String id, int delta) {
     if (delta == 0) return;
     final players = state.players;
-    if (players.where((player) => player.id == id).isEmpty) return;
+    final index = players.indexWhere((player) => player.id == id);
+    if (index == -1) return;
 
-    final updated = players
-        .map((player) => player.id == id
-            ? player.copyWith(score: player.score + delta)
-            : player)
-        .toList();
+    final updatedPlayer =
+        players[index].copyWith(score: players[index].score + delta);
+    final updated = List<PlayerScore>.from(players)..[index] = updatedPlayer;
 
-    final playerName = players.firstWhere((player) => player.id == id).name;
+    final action = delta > 0
+        ? '+$delta pts pour ${updatedPlayer.name}'
+        : '$delta pts pour ${updatedPlayer.name}';
+    _pushHistory('$action (total ${updatedPlayer.score}).');
+    state = state.copyWith(players: updated);
+  }
 
-    state = state.copyWith(
-      players: updated,
-      lastAction: '${delta > 0 ? '+' : ''}$delta pts pour $playerName.',
-    );
+  void renamePlayer(String id, String newName) {
+    final players = state.players;
+    final index = players.indexWhere((player) => player.id == id);
+    if (index == -1) return;
+
+    final updatedPlayer = players[index].copyWith(
+        name: newName.trim().isEmpty ? players[index].name : newName.trim());
+    final updated = List<PlayerScore>.from(players)..[index] = updatedPlayer;
+    _pushHistory(
+        'Joueur ${players[index].name} renommé en ${updatedPlayer.name}.');
+    state = state.copyWith(players: updated);
   }
 
   void removePlayer(String id) {
     final players = state.players;
-    final existing = players.where((player) => player.id == id).toList();
-    if (existing.isEmpty) return;
+    final index = players.indexWhere((player) => player.id == id);
+    if (index == -1) return;
+    final removed = players[index];
     final updated = players.where((player) => player.id != id).toList();
-    state = state.copyWith(
-      players: updated,
-      lastAction: 'Joueur ${existing.first.name} supprimé.',
-    );
+    _pushHistory('Joueur ${removed.name} supprimé.');
+    state = state.copyWith(players: updated);
   }
 
   void resetBoard() {
-    state = const ScoreBoardState(lastAction: 'Tableau réinitialisé.');
+    _pushHistory('Tableau réinitialisé.');
+    state = const ScoreBoardState(history: ['Tableau réinitialisé.']);
+  }
+
+  void _pushHistory(String entry) {
+    final history = [entry, ...state.history];
+    if (history.length > 10) history.removeLast();
+    state = state.copyWith(history: history);
   }
 }
