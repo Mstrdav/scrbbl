@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -6,6 +8,13 @@ plugins {
 }
 
 android {
+    val keyPropertiesFile = rootDir.resolve("key.properties")
+    val keyProperties = Properties().apply {
+        if (keyPropertiesFile.exists()) {
+            keyPropertiesFile.inputStream().use { load(it) }
+        }
+    }
+
     namespace = "com.mstrdav.scrbbl"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973"
@@ -30,11 +39,18 @@ android {
         versionName = flutter.versionName
     }
 
+    signingConfigs {
+        create("release") {
+            keyAlias = keyProperties.getProperty("keyAlias", "scrbbl-release")
+            keyPassword = keyProperties.getProperty("keyPassword")
+            storeFile = file(keyProperties.getProperty("storeFile", "/home/mstrdav/scrbbl-release.jks"))
+            storePassword = keyProperties.getProperty("storePassword")
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
 }
